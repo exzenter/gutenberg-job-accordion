@@ -1,0 +1,16 @@
+# Build-Artefakte
+*.zip
+
+# Abhängigkeiten – dieses Plugin braucht keine
+node_modules/
+vendor/
+
+# Editor und Betriebssystem
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs
+*.log

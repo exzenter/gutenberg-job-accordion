@@ -1,0 +1,197 @@
+/**
+ * Ullmer Stellenanzeigen – Blockstil für core/accordion.
+ *
+ * Greift nur, wenn am Accordion-Block der Stil "Stellenanzeige" gewählt ist
+ * (Klasse .is-style-ullmer-job). Alle anderen Accordions auf der Seite bleiben
+ * unberührt.
+ *
+ * Der Pfeil ist kein Bild, sondern eine CSS-Maske. Dadurch lassen sich
+ * Kreisfüllung und Pfeilfarbe getrennt animieren – mit einer fertigen SVG-Datei
+ * ginge das nicht, da müsste man zwei Grafiken hart umschalten.
+ * Die Originale aus Figma liegen unter assets/figma/ als Referenz.
+ */
+
+.wp-block-accordion.is-style-ullmer-job {
+	--ullmer-accent: #23bae2;
+	--ullmer-surface: #f4f5f6;
+	--ullmer-text: #000000;
+
+	--ullmer-radius: 40px;
+	--ullmer-item-gap: 14px;
+	--ullmer-icon-size: 71px;
+	--ullmer-icon-ring: 2px;
+
+	--ullmer-pad-inline-start: 40px;
+	--ullmer-pad-inline-end: 20px;
+	--ullmer-pad-block: 20px;
+
+	--ullmer-heading-font: Merriweather, Georgia, "Times New Roman", serif;
+	--ullmer-heading-size: 25px;
+	--ullmer-body-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--ullmer-body-size: 18px;
+	--ullmer-body-line-height: 26px;
+
+	--ullmer-duration: 0.3s;
+	--ullmer-easing: cubic-bezier( 0.4, 0, 0.2, 1 );
+}
+
+/* --- Karte -------------------------------------------------------------- */
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item {
+	overflow: hidden;
+	margin-block-end: var(--ullmer-item-gap);
+	border: 0;
+	border-radius: var(--ullmer-radius);
+	background-color: var(--ullmer-surface);
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item:last-child {
+	margin-block-end: 0;
+}
+
+/* --- Kopfzeile ---------------------------------------------------------- */
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading {
+	margin: 0;
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle {
+	display: flex;
+	gap: 20px;
+	align-items: center;
+	width: 100%;
+	padding: var(--ullmer-pad-block) var(--ullmer-pad-inline-end) var(--ullmer-pad-block) var(--ullmer-pad-inline-start);
+	border: 0;
+	background-color: transparent;
+	cursor: pointer;
+	text-align: start;
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle-title {
+	flex: 1 1 auto;
+	color: var(--ullmer-accent);
+	font-family: var(--ullmer-heading-font);
+	font-size: var(--ullmer-heading-size);
+	font-weight: 700;
+	line-height: 1.3;
+	text-wrap: pretty;
+}
+
+/* --- Pfeil-Button ------------------------------------------------------- */
+
+/*
+ * Core rendert hier ein <span> mit einem "+" als Text. Das wird unsichtbar
+ * gemacht und der Platz vom Kreis übernommen.
+ */
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle-icon {
+	position: relative;
+	display: block;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: var(--ullmer-icon-size);
+	height: var(--ullmer-icon-size);
+	border: var(--ullmer-icon-ring) solid var(--ullmer-accent);
+	border-radius: 50%;
+	background-color: transparent;
+	color: transparent;
+	font-size: 0;
+	line-height: 0;
+	transition: background-color var(--ullmer-duration) var(--ullmer-easing),
+		border-color var(--ullmer-duration) var(--ullmer-easing);
+}
+
+/*
+ * Der Pfeil selbst: Maske aus den beiden Strichen des Figma-Icons, eingefärbt
+ * über background-color. Der Pfad zeigt im Original nach unten links – das ist
+ * der aufgeklappte Zustand. Zugeklappt wird um 180 Grad gedreht.
+ */
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle-icon::after {
+	content: "";
+	position: absolute;
+	inset: calc( var(--ullmer-icon-ring) * -1 );
+	background-color: var(--ullmer-accent);
+	-webkit-mask-image: var(--ullmer-arrow-mask);
+	mask-image: var(--ullmer-arrow-mask);
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-size: 100% 100%;
+	mask-size: 100% 100%;
+	transform: rotate( 180deg );
+	transition: background-color var(--ullmer-duration) var(--ullmer-easing),
+		transform var(--ullmer-duration) var(--ullmer-easing);
+}
+
+.wp-block-accordion.is-style-ullmer-job {
+	--ullmer-arrow-mask: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 73 73' fill='none'%3E%3Cpath d='M51.5 21.5L27.32 45.68' stroke='%23000' stroke-width='5' stroke-miterlimit='10'/%3E%3Cpath d='M49.87 51.5L26.18 46.98L21.5 23.13' stroke='%23000' stroke-width='5' stroke-miterlimit='10'/%3E%3C/svg%3E" );
+}
+
+/* --- Aufgeklappt: Kreis füllt sich, Pfeil dreht und wechselt die Farbe --- */
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open .wp-block-accordion-heading__toggle-icon {
+	background-color: var(--ullmer-accent);
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open .wp-block-accordion-heading__toggle-icon::after {
+	background-color: var(--ullmer-surface);
+	transform: rotate( 0deg );
+}
+
+/* --- Hover und Fokus ---------------------------------------------------- */
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon {
+	background-color: var(--ullmer-accent);
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon::after {
+	background-color: var(--ullmer-surface);
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:focus-visible {
+	outline: 2px solid var(--ullmer-accent);
+	outline-offset: -4px;
+	border-radius: var(--ullmer-radius);
+}
+
+/* --- Inhalt ------------------------------------------------------------- */
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel {
+	padding-block-end: var(--ullmer-pad-block);
+	padding-inline: var(--ullmer-pad-inline-start) var(--ullmer-pad-inline-end);
+	color: var(--ullmer-text);
+	font-family: var(--ullmer-body-font);
+	font-size: var(--ullmer-body-size);
+	line-height: var(--ullmer-body-line-height);
+}
+
+/* --- Responsiv ---------------------------------------------------------- */
+
+@media (max-width: 781px) {
+	.wp-block-accordion.is-style-ullmer-job {
+		--ullmer-radius: 28px;
+		--ullmer-icon-size: 48px;
+		--ullmer-heading-size: clamp( 17px, 4.4vw, 25px );
+		--ullmer-body-size: 16px;
+		--ullmer-body-line-height: 24px;
+		--ullmer-pad-inline-start: 24px;
+		--ullmer-pad-inline-end: 16px;
+		--ullmer-pad-block: 16px;
+	}
+
+	.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle {
+		gap: 12px;
+	}
+}
+
+/* --- Reduzierte Bewegung ------------------------------------------------ */
+
+/*
+ * Der Farbwechsel bleibt, nur die Drehung wird hart geschaltet – die Drehung
+ * ist die Bewegung, die stört, die Farbe nicht.
+ */
+@media (prefers-reduced-motion: reduce) {
+	.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle-icon::after {
+		transition: background-color var(--ullmer-duration) var(--ullmer-easing);
+	}
+}
