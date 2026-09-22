@@ -39,15 +39,38 @@ oder Template, Felder pflegen — für rund 27 Anzeigen an drei Standorten, die 
 im Jahr angefasst werden. Als Accordion-Items auf der Karriereseite tippt man sie direkt
 dort, wo sie stehen.
 
-### Der eine Haken
+### Höhen-Animation geht doch
 
-Der Core-Block versteckt das Panel über das `hidden`-Attribut, und `hidden` heißt
-`display: none`. **Eine Höhen-Animation des aufklappenden Inhalts geht damit nicht** — nicht
-ohne `hidden` zu überschreiben, was das Panel für Screenreader sichtbar machen würde, obwohl
-es zu ist. Das wäre ein echter Barrierefreiheits-Fehler für einen kosmetischen Gewinn.
+Core versteckt das Panel nicht mit `display: none`, sondern mit
+**`hidden="until-found"`**. Das ergibt `content-visibility: hidden` — der Inhalt bleibt
+findbar über Strg+F, und die Höhe ist animierbar, ohne das `hidden`-Attribut anzufassen.
 
-Für das, was du wolltest, spielt das keine Rolle: Pfeildrehung und Farbwechsel sitzen am
-Icon in der Kopfzeile, und die ist immer sichtbar. Beides animiert sauber.
+Damit fährt das Panel sauber auf und zu:
+
+```css
+.wp-block-accordion.is-style-ullmer-job {
+	interpolate-size: allow-keywords;
+}
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel {
+	height: auto;
+	overflow: hidden;
+	transition: height .3s, padding .3s, content-visibility .3s allow-discrete;
+}
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel[hidden] {
+	height: 0;
+	padding-block-end: 0;
+}
+```
+
+`interpolate-size: allow-keywords` erlaubt `height: 0` → `auto`. `allow-discrete` sorgt dafür,
+dass `content-visibility` erst **am Ende** der Animation umschaltet — der Inhalt bleibt also
+genau so lange im Accessibility-Tree, wie er auch sichtbar ist. Kein Überschreiben von
+`display`, kein Kampf gegen das `hidden`-Attribut, keine Barrierefreiheits-Kröte.
+
+Gemessen: 46 px auf 0 in 292 ms, `content-visibility` kippt bei 310 ms.
+
+Browser ohne `interpolate-size` klappen weiterhin hart um — kein Funktionsverlust, nur keine
+Animation.
 
 ---
 
@@ -141,7 +164,48 @@ Unter `assets/figma/` als Referenz, nicht vom Plugin geladen:
   Dokumentation und dem WordPress-Developer-Blog; falls Core sie ändert, bricht das CSS still.
 - Die Kartenoptik geht davon aus, dass das Theme dem Accordion-Item keine eigene
   Hintergrundfarbe oder Rahmen aufzwingt. Falls doch, muss die Spezifität hoch.
-- Keine Höhen-Animation des Panels, siehe oben.
+- Die Höhen-Animation braucht `interpolate-size: allow-keywords`. Wo der Browser das nicht
+  kennt, klappt das Panel hart um.
+
+---
+
+## Neu in 1.1.0
+
+### Pfeil zeigte im offenen Zustand nach links
+
+Core dreht das Icon-Span im offenen Zustand um 45 Grad, um sein `+` zu einem `×` zu machen:
+
+```css
+.wp-block-accordion-item.is-open > .wp-block-accordion-heading
+.wp-block-accordion-heading__toggle-icon { transform: rotate(45deg); }
+```
+
+Bei uns addierte sich das auf die Pfeildrehung — aus „nach unten links" wurde dadurch
+„nach links". Nebenwirkung: die Bounding-Box des Spans wuchs um den Faktor √2 auf 100,4 px,
+der Kreis wurde zum Oval.
+
+Behoben, indem das Span unverdreht bleibt und die Drehung ausschließlich auf dem Pfeil sitzt.
+Zusätzlich `mask-size: contain` statt `100% 100%` — sollte die Box doch einmal nicht
+quadratisch sein, entstehen dann Ränder statt eines verzerrten Pfeils.
+
+### Pfeil dreht beim Überfahren vor
+
+Der Pfeil zeigt schon beim Überfahren der Kopfzeile, wohin die Reise geht — 45 Grad in
+Richtung des anderen Zustands, den Rest beim Klick:
+
+| Zustand | Winkel | Richtung |
+|---|---|---|
+| zu | `180deg` | ↗ |
+| zu, überfahren | `135deg` | ↑ (12 Uhr) |
+| offen | `0deg` | ↙ |
+| offen, überfahren | `45deg` | ← |
+
+Die Winkel hängen an Custom Properties (`--ullmer-arrow-closed` usw.) und lassen sich im Theme
+überschreiben. Gilt auch bei Tastaturfokus.
+
+### Höhen-Animation
+
+Siehe oben — das Panel fährt jetzt auf und zu.
 
 ---
 

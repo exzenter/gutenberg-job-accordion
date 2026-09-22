@@ -31,8 +31,21 @@
 	--ullmer-body-size: 18px;
 	--ullmer-body-line-height: 26px;
 
+	/*
+	 * Pfeilwinkel. Der Pfad zeigt im Original nach unten links – das ist der
+	 * aufgeklappte Zustand. Zugeklappt sind es 180 Grad, beim Überfahren jeweils
+	 * 45 Grad in Richtung des anderen Zustands als Vorschau.
+	 */
+	--ullmer-arrow-closed: 180deg;
+	--ullmer-arrow-closed-hover: 135deg;
+	--ullmer-arrow-open: 0deg;
+	--ullmer-arrow-open-hover: 45deg;
+
 	--ullmer-duration: 0.3s;
 	--ullmer-easing: cubic-bezier( 0.4, 0, 0.2, 1 );
+
+	/* Nötig, damit height von 0 auf auto animieren kann. */
+	interpolate-size: allow-keywords;
 }
 
 /* --- Karte -------------------------------------------------------------- */
@@ -89,7 +102,10 @@
 	flex: 0 0 auto;
 	box-sizing: border-box;
 	width: var(--ullmer-icon-size);
+	min-width: var(--ullmer-icon-size);
 	height: var(--ullmer-icon-size);
+	min-height: var(--ullmer-icon-size);
+	padding: 0;
 	border: var(--ullmer-icon-ring) solid var(--ullmer-accent);
 	border-radius: 50%;
 	background-color: transparent;
@@ -101,9 +117,27 @@
 }
 
 /*
+ * Core dreht das Icon-Span im offenen Zustand um 45 Grad, um sein "+" zu einem
+ * "×" zu machen:
+ *
+ *   .wp-block-accordion-item.is-open > .wp-block-accordion-heading
+ *   .wp-block-accordion-heading__toggle-icon { transform: rotate(45deg); }
+ *
+ * Bei uns addierte sich das auf die Pfeildrehung – aus "nach unten links" wurde
+ * dadurch "nach links". Die Drehung gehört ausschließlich auf den Pfeil, das
+ * Span bleibt unverdreht. Nebeneffekt sonst: die Bounding-Box des Spans wächst
+ * um den Faktor Wurzel 2 und der Kreis wird zum Oval.
+ */
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open > .wp-block-accordion-heading .wp-block-accordion-heading__toggle-icon {
+	transform: none;
+}
+
+/*
  * Der Pfeil selbst: Maske aus den beiden Strichen des Figma-Icons, eingefärbt
- * über background-color. Der Pfad zeigt im Original nach unten links – das ist
- * der aufgeklappte Zustand. Zugeklappt wird um 180 Grad gedreht.
+ * über background-color.
+ *
+ * mask-size: contain statt 100% 100% – sollte die Box doch einmal nicht
+ * quadratisch sein, entstehen dann Ränder statt eines verzerrten Pfeils.
  */
 .wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle-icon::after {
 	content: "";
@@ -116,9 +150,9 @@
 	mask-repeat: no-repeat;
 	-webkit-mask-position: center;
 	mask-position: center;
-	-webkit-mask-size: 100% 100%;
-	mask-size: 100% 100%;
-	transform: rotate( 180deg );
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	transform: rotate( var(--ullmer-arrow-closed) );
 	transition: background-color var(--ullmer-duration) var(--ullmer-easing),
 		transform var(--ullmer-duration) var(--ullmer-easing);
 }
@@ -127,7 +161,20 @@
 	--ullmer-arrow-mask: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 73 73' fill='none'%3E%3Cpath d='M51.5 21.5L27.32 45.68' stroke='%23000' stroke-width='5' stroke-miterlimit='10'/%3E%3Cpath d='M49.87 51.5L26.18 46.98L21.5 23.13' stroke='%23000' stroke-width='5' stroke-miterlimit='10'/%3E%3C/svg%3E" );
 }
 
-/* --- Aufgeklappt: Kreis füllt sich, Pfeil dreht und wechselt die Farbe --- */
+/* --- Überfahren: Pfeil dreht schon ein Stück in Richtung Ziel ------------ */
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon,
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:focus-visible .wp-block-accordion-heading__toggle-icon {
+	background-color: var(--ullmer-accent);
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon::after,
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:focus-visible .wp-block-accordion-heading__toggle-icon::after {
+	background-color: var(--ullmer-surface);
+	transform: rotate( var(--ullmer-arrow-closed-hover) );
+}
+
+/* --- Aufgeklappt: Kreis gefüllt, Pfeil nach unten links ----------------- */
 
 .wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open .wp-block-accordion-heading__toggle-icon {
 	background-color: var(--ullmer-accent);
@@ -135,17 +182,12 @@
 
 .wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open .wp-block-accordion-heading__toggle-icon::after {
 	background-color: var(--ullmer-surface);
-	transform: rotate( 0deg );
+	transform: rotate( var(--ullmer-arrow-open) );
 }
 
-/* --- Hover und Fokus ---------------------------------------------------- */
-
-.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon {
-	background-color: var(--ullmer-accent);
-}
-
-.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon::after {
-	background-color: var(--ullmer-surface);
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open .wp-block-accordion-heading__toggle:hover .wp-block-accordion-heading__toggle-icon::after,
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item.is-open .wp-block-accordion-heading__toggle:focus-visible .wp-block-accordion-heading__toggle-icon::after {
+	transform: rotate( var(--ullmer-arrow-open-hover) );
 }
 
 .wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle:focus-visible {
@@ -154,15 +196,38 @@
 	border-radius: var(--ullmer-radius);
 }
 
-/* --- Inhalt ------------------------------------------------------------- */
+/* --- Inhalt, auf- und zufahrend ---------------------------------------- */
 
+/*
+ * Core versteckt das Panel mit hidden="until-found". Das ergibt
+ * content-visibility: hidden statt display: none – und damit ist die Höhe
+ * animierbar, ohne das hidden-Attribut zu überschreiben.
+ *
+ * interpolate-size: allow-keywords (oben am Block) erlaubt height: 0 -> auto.
+ * transition-behavior allow-discrete sorgt dafür, dass content-visibility erst
+ * am Ende der Animation umschaltet – der Inhalt bleibt also genau so lange im
+ * Accessibility-Tree, wie er auch sichtbar ist.
+ *
+ * Browser ohne interpolate-size klappen weiterhin hart um. Kein Funktions-
+ * verlust, nur keine Animation.
+ */
 .wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel {
+	height: auto;
+	overflow: hidden;
 	padding-block-end: var(--ullmer-pad-block);
 	padding-inline: var(--ullmer-pad-inline-start) var(--ullmer-pad-inline-end);
 	color: var(--ullmer-text);
 	font-family: var(--ullmer-body-font);
 	font-size: var(--ullmer-body-size);
 	line-height: var(--ullmer-body-line-height);
+	transition: height var(--ullmer-duration) var(--ullmer-easing),
+		padding var(--ullmer-duration) var(--ullmer-easing),
+		content-visibility var(--ullmer-duration) allow-discrete;
+}
+
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel[hidden] {
+	height: 0;
+	padding-block-end: 0;
 }
 
 /* --- Responsiv ---------------------------------------------------------- */
@@ -187,11 +252,15 @@
 /* --- Reduzierte Bewegung ------------------------------------------------ */
 
 /*
- * Der Farbwechsel bleibt, nur die Drehung wird hart geschaltet – die Drehung
- * ist die Bewegung, die stört, die Farbe nicht.
+ * Der Farbwechsel bleibt, Drehung und Höhenfahrt werden hart geschaltet –
+ * Bewegung stört, Farbe nicht.
  */
 @media (prefers-reduced-motion: reduce) {
 	.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-heading__toggle-icon::after {
 		transition: background-color var(--ullmer-duration) var(--ullmer-easing);
+	}
+
+	.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel {
+		transition: none;
 	}
 }
