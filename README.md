@@ -159,9 +159,9 @@ Unter `assets/figma/` als Referenz, nicht vom Plugin geladen:
 
 ## Grenzen
 
-- Getestet mit einer nachgebauten Testseite, die das Core-Markup nachbildet — **nicht in einer
-  laufenden WordPress-6.9-Installation.** Die Klassennamen stammen aus der offiziellen
-  Dokumentation und dem WordPress-Developer-Blog; falls Core sie ändert, bricht das CSS still.
+- Die Regeln sind gegen das Markup einer laufenden WordPress-6.9-Installation entwickelt und
+  auf nachgebauten Testseiten gemessen. Falls Core die Klassennamen ändert, bricht das CSS
+  still — es gibt keine Absicherung dagegen.
 - Die Kartenoptik geht davon aus, dass das Theme dem Accordion-Item keine eigene
   Hintergrundfarbe oder Rahmen aufzwingt. Falls doch, muss die Spezifität hoch.
 - Die Höhen-Animation braucht `interpolate-size: allow-keywords`. Wo der Browser das nicht
@@ -220,3 +220,45 @@ Herstellerangabe.
 ## Lizenz
 
 GPL-2.0-or-later · © exzent
+
+---
+
+## Neu in 1.2.0
+
+### Beim Laden klappten alle Panels sichtbar zu
+
+Der Server liefert die Panels **ohne** `hidden` und die Items **ohne** `is-open`. Beides setzt
+erst die Interactivity API, sobald ihr JavaScript geladen hat:
+
+```html
+<div data-wp-bind--hidden="state.isHidden"  class="wp-block-accordion-panel">
+<div data-wp-class--is-open="state.isOpen" class="wp-block-accordion-item">
+```
+
+Beim ersten Rendern war damit jedes Panel offen. Sobald die Runtime `hidden` nachreichte, liefen
+alle gleichzeitig zu — bei neun Stellen ein sichtbares Zucken der ganzen Seite.
+
+Das Problem gab es schon vor 1.1.0, nur war es dort ein unsichtbarer Sprung statt einer
+300-ms-Animation. Die Höhen-Animation hat es erst sichtbar gemacht.
+
+Behoben, indem der zugeklappte Zustand an das gebunden ist, was bereits im Server-HTML steht —
+das Fehlen von `is-open`:
+
+```css
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item:not(.is-open) .wp-block-accordion-panel,
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel[hidden] {
+	height: 0;
+	padding-block-end: 0;
+}
+```
+
+Das greift im ersten Frame, ganz ohne JavaScript. Reicht die Runtime später `hidden` nach, ist
+die Höhe längst 0 und es gibt nichts zu animieren.
+
+Gemessen an nachgebautem Server-Markup mit neun Items: Panelhöhen vor der Hydration alle 0,
+Seitenhöhe über 400 ms konstant bei 1402 px. Aufklappen animiert weiterhin, 0 auf 108 px in
+rund 290 ms.
+
+**Ein Rest bleibt:** Items mit „standardmäßig geöffnet" bekommen vom Server ebenfalls kein
+`is-open` und fahren deshalb nach der Hydration auf. Das ist eine Bewegung statt neun und wirkt
+eher wie Absicht.

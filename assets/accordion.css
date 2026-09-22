@@ -225,6 +225,25 @@
 		content-visibility var(--ullmer-duration) allow-discrete;
 }
 
+/*
+ * Zugeklappt.
+ *
+ * Wichtig ist hier :not(.is-open) neben [hidden]. Der Server liefert die Panels
+ * ohne hidden-Attribut und die Items ohne is-open – beides setzt erst die
+ * Interactivity API, wenn ihr JavaScript geladen hat:
+ *
+ *   <div data-wp-bind--hidden="state.isHidden" class="wp-block-accordion-panel">
+ *   <div data-wp-class--is-open="state.isOpen" class="wp-block-accordion-item">
+ *
+ * Ohne die erste Zeile wäre beim ersten Rendern jedes Panel offen. Sobald die
+ * Runtime dann hidden setzt, liefen alle Panels gleichzeitig zu – bei einer
+ * Seite mit vielen Stellen ein sichtbares Zucken der ganzen Seite.
+ *
+ * :not(.is-open) greift dagegen schon im ersten Frame, ganz ohne JavaScript.
+ * Wenn die Runtime später hidden nachreicht, ist die Höhe längst 0 und es gibt
+ * nichts zu animieren.
+ */
+.wp-block-accordion.is-style-ullmer-job .wp-block-accordion-item:not(.is-open) .wp-block-accordion-panel,
 .wp-block-accordion.is-style-ullmer-job .wp-block-accordion-panel[hidden] {
 	height: 0;
 	padding-block-end: 0;
