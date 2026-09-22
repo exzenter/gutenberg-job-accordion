@@ -145,6 +145,14 @@ Unter `assets/figma/` als Referenz, nicht vom Plugin geladen:
 
 ---
 
+## Hersteller
+
+Entwickelt und vertrieben von **exzent** — <https://exzent.de/>
+
+Das Design stammt aus dem Ullmer-Website-Redesign. Die Bezeichner im Code
+(`.is-style-ullmer-job`, `--ullmer-*`) benennen dieses Projekt und sind keine
+Herstellerangabe.
+
 ## Lizenz
 
-GPL-2.0-or-later
+GPL-2.0-or-later · © exzent
